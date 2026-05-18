@@ -1,38 +1,48 @@
-# dependencies
-/node_modules
-/.pnp
+# --- Dependencies ---
+node_modules/
+.pnp
 .pnp.js
 
-# testing
-/coverage
+# --- Next.js ---
+.next/
+out/
 
-# next.js
-/.next/
-/out/
+# --- Production ---
+build/
 
-# production
-/build
+# --- Environment ---
+.env
+.env*.local
+.env*.production
 
-# misc
+# --- Database ---
+prisma/dev.db
+prisma/dev.db-journal
+
+# --- IDE / Editors ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# --- OS ---
 .DS_Store
-*.pem
+Thumbs.db
+desktop.ini
 
-# debug
+# --- Debug ---
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env
-.env*.local
-
-# database
-prisma/dev.db
-prisma/dev.db-journal
-
-# vercel
-.vercel
-
-# typescript
+# --- TypeScript ---
 *.tsbuildinfo
 next-env.d.ts
+
+# --- Misc ---
+*.pem
+.cache/
+tmp/

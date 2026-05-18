@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-stone-50 text-stone-900 font-body;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+}
+
+@layer utilities {
+  .bg-texture {
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 50px,
+        rgba(120, 80, 40, 0.02) 50px,
+        rgba(120, 80, 40, 0.02) 51px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 50px,
+        rgba(120, 80, 40, 0.02) 50px,
+        rgba(120, 80, 40, 0.02) 51px
+      );
+  }
+
+  .bg-warm {
+    background: linear-gradient(
+      180deg,
+      #fdf8f0 0%,
+      #faf1e0 50%,
+      #fdf8f0 100%
+    );
+  }
+
+  .interactive-card {
+    @apply relative overflow-hidden transition-all duration-500;
+  }
+
+  .interactive-card::before {
+    content: "";
+    @apply absolute inset-0 opacity-0 transition-opacity duration-500;
+    background: linear-gradient(
+      135deg,
+      rgba(196, 109, 35, 0.05) 0%,
+      rgba(117, 133, 85, 0.05) 100%
+    );
+  }
+
+  .interactive-card:hover::before {
+    @apply opacity-100;
+  }
+
+  .interactive-card:hover {
+    @apply shadow-lg;
+    transform: translateY(-2px);
+  }
+
+  .parallax-layer {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+}

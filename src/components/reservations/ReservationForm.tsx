@@ -2,7 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import Button from "@/components/ui/Button";
+import PhoneInput from "@/components/ui/PhoneInput";
 import { useTranslations } from "@/hooks/useTranslations";
+import { useToast } from "@/components/ui/Toast";
 
 interface FormData {
   name: string;
@@ -14,10 +16,16 @@ interface FormData {
   notes: string;
 }
 
+interface Slot {
+  time: string;
+  available: boolean;
+  remainingSeats: number;
+}
+
 const initialForm: FormData = {
   name: "",
   email: "",
-  phone: "",
+  phone: "+39 ",
   date: "",
   time: "",
   guests: "2",
@@ -26,25 +34,75 @@ const initialForm: FormData = {
 
 export default function ReservationForm() {
   const { t } = useTranslations();
+  const { addToast } = useToast();
   const [form, setForm] = useState<FormData>(initialForm);
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [slots, setSlots] = useState<Slot[] | null>(null);
+  const [checking, setChecking] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleDateChange = async (date: string) => {
+    setForm({ ...form, date, time: "" });
+    setSlots(null);
+    if (!date) return;
+
+    setChecking(true);
+    try {
+      const res = await fetch(`/api/reservations/availability?date=${date}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSlots(data.slots);
+      }
+    } catch {
+      // silent
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSending(true);
+
+    try {
+      const res = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSubmitted(true);
+        addToast("Reservation submitted successfully!", "success");
+      } else {
+        addToast(data.error || "Something went wrong. Please try again.", "error");
+      }
+    } catch {
+      addToast("Network error. Please try again.", "error");
+    } finally {
+      setSending(false);
+    }
   };
 
   if (submitted) {
     return (
-      <div className="text-center py-16">
-        <h3 className="font-display text-2xl text-brand-700 mb-4">{t("reservations.successTitle")}</h3>
-        <p className="text-stone-600">{t("reservations.successBody")}</p>
+      <div className="text-center py-12">
+        <div className="w-16 h-16 rounded-full bg-brand-50 flex items-center justify-center mx-auto mb-6">
+          <svg className="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h3 className="font-display text-2xl text-stone-900 mb-2">{t("reservations.successTitle")}</h3>
+        <p className="text-stone-500 text-sm mb-8">{t("reservations.successBody")}</p>
         <Button
           onClick={() => {
             setSubmitted(false);
             setForm(initialForm);
+            setSlots(null);
           }}
-          className="mt-6"
+          size="sm"
         >
           {t("reservations.successReset")}
         </Button>
@@ -55,128 +113,132 @@ export default function ReservationForm() {
   const today = new Date().toISOString().split("T")[0];
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form onSubmit={handleSubmit}>
+      <div className="space-y-7">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-stone-700 mb-1">
-            {t("reservations.formName")} *
+          <label className="block text-[11px] uppercase tracking-[0.15em] text-stone-400 mb-1.5">
+            {t("reservations.formName")}
           </label>
           <input
-            id="name"
             type="text"
             required
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="w-full px-4 py-3 border border-stone-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors bg-white"
+            placeholder="Your full name"
+            className="w-full px-0 py-3 border-b border-stone-200 focus:border-brand-500 outline-none bg-transparent text-stone-900 text-sm placeholder:text-stone-300 transition-colors"
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-stone-700 mb-1">
-            {t("reservations.formEmail")} *
+          <label className="block text-[11px] uppercase tracking-[0.15em] text-stone-400 mb-1.5">
+            {t("reservations.formEmail")}
           </label>
           <input
-            id="email"
             type="email"
             required
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="w-full px-4 py-3 border border-stone-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors bg-white"
+            placeholder="your@email.com"
+            className="w-full px-0 py-3 border-b border-stone-200 focus:border-brand-500 outline-none bg-transparent text-stone-900 text-sm placeholder:text-stone-300 transition-colors"
           />
         </div>
 
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-stone-700 mb-1">
-            {t("reservations.formPhone")} *
+          <label className="block text-[11px] uppercase tracking-[0.15em] text-stone-400 mb-1.5">
+            {t("reservations.formPhone")}
           </label>
-          <input
-            id="phone"
-            type="tel"
-            required
+          <PhoneInput
             value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            className="w-full px-4 py-3 border border-stone-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors bg-white"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="guests" className="block text-sm font-medium text-stone-700 mb-1">
-            {t("reservations.formGuests")} *
-          </label>
-          <select
-            id="guests"
-            value={form.guests}
-            onChange={(e) => setForm({ ...form, guests: e.target.value })}
-            className="w-full px-4 py-3 border border-stone-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors bg-white"
-          >
-            {[...Array(8)].map((_, i) => (
-              <option key={i + 1} value={i + 1}>
-                {i + 1} {i === 0 ? t("reservations.formGuest") : t("reservations.formGuestsLabel")}
-              </option>
-            ))}
-            <option value="9">{t("reservations.formLargerParty")}</option>
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="date" className="block text-sm font-medium text-stone-700 mb-1">
-            {t("reservations.formDate")} *
-          </label>
-          <input
-            id="date"
-            type="date"
+            onChange={(phone) => setForm({ ...form, phone })}
             required
-            min={today}
-            value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-            className="w-full px-4 py-3 border border-stone-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors bg-white"
           />
         </div>
 
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <label className="block text-[11px] uppercase tracking-[0.15em] text-stone-400 mb-1.5">
+              {t("reservations.formGuests")}
+            </label>
+            <select
+              value={form.guests}
+              onChange={(e) => setForm({ ...form, guests: e.target.value })}
+              className="w-full px-0 py-3 border-b border-stone-200 focus:border-brand-500 outline-none bg-transparent text-stone-900 text-sm transition-colors"
+            >
+              {[...Array(8)].map((_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {i + 1} {i === 0 ? t("reservations.formGuest") : t("reservations.formGuestsLabel")}
+                </option>
+              ))}
+              <option value="9">{t("reservations.formLargerParty")}</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] uppercase tracking-[0.15em] text-stone-400 mb-1.5">
+              {t("reservations.formDate")}
+            </label>
+            <input
+              type="date"
+              required
+              min={today}
+              value={form.date}
+              onChange={(e) => handleDateChange(e.target.value)}
+              className="w-full px-0 py-3 border-b border-stone-200 focus:border-brand-500 outline-none bg-transparent text-stone-900 text-sm transition-colors [color-scheme:light]"
+            />
+          </div>
+        </div>
+
         <div>
-          <label htmlFor="time" className="block text-sm font-medium text-stone-700 mb-1">
-            {t("reservations.formTime")} *
+          <label className="block text-[11px] uppercase tracking-[0.15em] text-stone-400 mb-1.5">
+            {t("reservations.formTime")}
           </label>
           <select
-            id="time"
             value={form.time}
             required
             onChange={(e) => setForm({ ...form, time: e.target.value })}
-            className="w-full px-4 py-3 border border-stone-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors bg-white"
+            className="w-full px-0 py-3 border-b border-stone-200 focus:border-brand-500 outline-none bg-transparent text-stone-900 text-sm transition-colors"
           >
-            <option value="">{t("reservations.formSelectTime")}</option>
-            <option value="12:00">12:00</option>
-            <option value="12:30">12:30</option>
-            <option value="13:00">13:00</option>
-            <option value="13:30">13:30</option>
-            <option value="18:00">18:00</option>
-            <option value="18:30">18:30</option>
-            <option value="19:00">19:00</option>
-            <option value="19:30">19:30</option>
-            <option value="20:00">20:00</option>
-            <option value="20:30">20:30</option>
-            <option value="21:00">21:00</option>
+            <option value="">
+              {checking ? "Checking availability..." : t("reservations.formSelectTime")}
+            </option>
+            {slots?.map((slot) => (
+              <option key={slot.time} value={slot.time} disabled={!slot.available}>
+                {slot.time}
+                {slot.available && slot.remainingSeats <= 5
+                  ? ` — only ${slot.remainingSeats} seat${slot.remainingSeats === 1 ? "" : "s"} left`
+                  : !slot.available
+                  ? " — fully booked"
+                  : ""}
+              </option>
+            ))}
           </select>
         </div>
 
-        <div className="md:col-span-2">
-          <label htmlFor="notes" className="block text-sm font-medium text-stone-700 mb-1">
+        <div>
+          <label className="block text-[11px] uppercase tracking-[0.15em] text-stone-400 mb-1.5">
             {t("reservations.formNotes")}
           </label>
           <textarea
-            id="notes"
-            rows={3}
+            rows={2}
             value={form.notes}
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            className="w-full px-4 py-3 border border-stone-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors bg-white resize-none"
+            placeholder="Allergies, special occasions, seating preferences..."
+            className="w-full px-0 py-3 border-b border-stone-200 focus:border-brand-500 outline-none bg-transparent text-stone-900 text-sm placeholder:text-stone-300 transition-colors resize-none"
           />
         </div>
-      </div>
 
-      <div className="text-center mt-8">
-        <Button type="submit" size="lg">
-          {t("reservations.formSubmit")}
-        </Button>
+        <div className="pt-4">
+          <button
+            type="submit"
+            disabled={sending}
+            className="w-full bg-brand-700 text-white py-3.5 text-sm tracking-wider uppercase hover:bg-brand-800 transition-colors disabled:opacity-50 font-medium"
+          >
+            {sending ? "Submitting..." : t("reservations.formSubmit")}
+          </button>
+          <p className="text-[10px] text-stone-400 text-center mt-3">
+            You will receive a confirmation email after booking.
+          </p>
+        </div>
       </div>
     </form>
   );

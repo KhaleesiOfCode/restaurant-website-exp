@@ -4,6 +4,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
+import { ToastProvider } from "@/components/ui/Toast";
 import AmbientToggle from "@/components/layout/AmbientToggle";
 import "./globals.css";
 
@@ -29,10 +30,12 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen flex flex-col">
         <LanguageProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <AmbientToggle />
+          <ToastProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <AmbientToggle />
+          </ToastProvider>
         </LanguageProvider>
       </body>
     </html>

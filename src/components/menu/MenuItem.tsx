@@ -5,7 +5,7 @@ import type { MenuItem as MenuItemType } from "@/data/menu";
 import { cn } from "@/lib/utils";
 
 interface MenuItemProps {
-  item: MenuItemType;
+  item: MenuItemType & { allergens?: string };
 }
 
 export default function MenuItem({ item }: MenuItemProps) {
@@ -21,7 +21,7 @@ export default function MenuItem({ item }: MenuItemProps) {
     >
       <div className="flex items-start justify-between gap-4 py-5 px-4">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <h4 className="font-display text-lg text-stone-900">{item.name}</h4>
             {item.dietary?.map((d) => (
               <span
@@ -33,6 +33,11 @@ export default function MenuItem({ item }: MenuItemProps) {
             ))}
           </div>
           <p className="text-sm text-stone-500 leading-relaxed">{item.description}</p>
+          {item.allergens && (
+            <p className="text-[10px] text-stone-400 mt-1">
+              <span className="uppercase tracking-wider">Allergens:</span> {item.allergens}
+            </p>
+          )}
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
           <span className="font-display text-lg text-brand-700 whitespace-nowrap">{item.price}</span>

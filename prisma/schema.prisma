@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+}
+
+model Reservation {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  date      String
+  time      String
+  guests    Int
+  notes     String   @default("")
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String   @default("")
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model MenuCategory {
+  id          String     @id @default(cuid())
+  name        String
+  description String     @default("")
+  order       Int        @default(0)
+  items       MenuItem[]
+  createdAt   DateTime   @default(now())
+}
+
+model MenuItem {
+  id          String       @id @default(cuid())
+  categoryId  String
+  category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name        String
+  description String       @default("")
+  price       String
+  dietary     String       @default("")
+  allergens   String       @default("")
+  origin      String       @default("")
+  pairing     String       @default("")
+  order       Int          @default(0)
+  createdAt   DateTime     @default(now())
+}

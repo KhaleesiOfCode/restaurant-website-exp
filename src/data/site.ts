@@ -12,6 +12,7 @@ export interface SiteInfo {
   contact: {
     phone: string;
     email: string;
+    adminEmail: string;
     social: {
       instagram: string;
       facebook: string;
@@ -40,6 +41,7 @@ export const siteInfo: SiteInfo = {
   contact: {
     phone: "+39 0578 123456",
     email: "info@ristorantebellavita.it",
+    adminEmail: "admin@bellavita.it",
     social: {
       instagram: "@ristorantebellavita",
       facebook: "RistoranteBellaVita",

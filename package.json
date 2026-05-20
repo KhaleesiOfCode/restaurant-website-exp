@@ -9,7 +9,7 @@
     "lint": "next lint",
     "seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate",
-    "vercel-build": "npx prisma migrate deploy && npx prisma generate && next build"
+    "vercel-build": "npx prisma migrate deploy && npx prisma generate && npx tsx prisma/seed.ts && next build"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

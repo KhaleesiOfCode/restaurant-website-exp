@@ -24,6 +24,9 @@ export default function AdminMenu() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCat, setSelectedCat] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [showCatForm, setShowCatForm] = useState(false);
+  const [catName, setCatName] = useState("");
+  const [catDesc, setCatDesc] = useState("");
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -41,6 +44,22 @@ export default function AdminMenu() {
   const fetchCategories = async () => {
     const res = await fetch("/api/admin/menu/categories");
     if (res.ok) setCategories(await res.json());
+  };
+
+  const addCategory = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!catName.trim()) return;
+
+    await fetch("/api/admin/menu/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: catName, description: catDesc }),
+    });
+
+    setCatName("");
+    setCatDesc("");
+    setShowCatForm(false);
+    fetchCategories();
   };
 
   const addItem = async (e: FormEvent) => {
@@ -66,7 +85,50 @@ export default function AdminMenu() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-stone-900 mb-8">Menu</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="font-display text-3xl text-stone-900">Menu</h1>
+        <button
+          onClick={() => setShowCatForm(true)}
+          className="text-xs uppercase tracking-wider text-brand-700 hover:text-brand-800"
+        >
+          + Add Category
+        </button>
+      </div>
+
+      {showCatForm && (
+        <form onSubmit={addCategory} className="bg-white border border-stone-200 p-4 mb-8 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              placeholder="Category name *"
+              required
+              value={catName}
+              onChange={(e) => setCatName(e.target.value)}
+              className="px-3 py-2 border border-stone-200 bg-white text-sm outline-none focus:border-brand-500"
+            />
+            <input
+              placeholder="Description (optional)"
+              value={catDesc}
+              onChange={(e) => setCatDesc(e.target.value)}
+              className="px-3 py-2 border border-stone-200 bg-white text-sm outline-none focus:border-brand-500"
+            />
+          </div>
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              className="bg-brand-700 text-white px-4 py-2 text-xs uppercase tracking-wider hover:bg-brand-800 transition-colors"
+            >
+              Add Category
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowCatForm(false); setCatName(""); setCatDesc(""); }}
+              className="text-xs text-stone-400 hover:text-stone-600 uppercase tracking-wider"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
 
       <div className="space-y-8">
         {categories.map((cat) => (

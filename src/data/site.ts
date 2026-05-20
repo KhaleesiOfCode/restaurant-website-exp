@@ -36,7 +36,7 @@ export const siteInfo: SiteInfo = {
     address: "Via della Rosa, 42",
     city: "Montepulciano",
     region: "Tuscany",
-    mapUrl: "https://maps.google.com",
+    mapUrl: "https://www.openstreetmap.org/?mlat=43.0917&mlon=11.7823#map=16/43.0917/11.7823",
   },
   contact: {
     phone: "+39 0578 123456",
@@ -48,7 +48,7 @@ export const siteInfo: SiteInfo = {
     },
   },
   hours: [
-    { day: "Monday – Friday", open: "12:00", close: "22:00" },
+    { day: "Monday - Friday", open: "12:00", close: "22:00" },
     { day: "Saturday", open: "12:00", close: "23:00" },
     { day: "Sunday", open: "12:00", close: "21:00" },
   ],

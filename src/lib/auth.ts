@@ -3,7 +3,18 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("JWT_SECRET environment variable is required in production");
+    }
+    return "dev-secret-change-in-production";
+  }
+  return secret;
+}
+
+const JWT_SECRET = getJwtSecret();
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);

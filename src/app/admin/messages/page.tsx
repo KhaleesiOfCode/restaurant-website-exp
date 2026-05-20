@@ -13,17 +13,20 @@ interface Message {
   createdAt: string;
 }
 
+const PAGE_SIZE = 10;
+
 export default function AdminMessages() {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
-    fetchMessages();
+    const abort = new AbortController();
+    fetch("/api/admin/messages", { signal: abort.signal })
+      .then((res) => res.ok && res.json())
+      .then((data) => data && setMessages(data))
+      .catch(() => {});
+    return () => abort.abort();
   }, []);
-
-  const fetchMessages = async () => {
-    const res = await fetch("/api/admin/messages");
-    if (res.ok) setMessages(await res.json());
-  };
 
   const toggleRead = async (id: string, isRead: boolean) => {
     await fetch(`/api/admin/messages/${id}`, {
@@ -31,8 +34,12 @@ export default function AdminMessages() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isRead: !isRead }),
     });
-    fetchMessages();
+    const res = await fetch("/api/admin/messages");
+    if (res.ok) setMessages(await res.json());
   };
+
+  const totalPages = Math.ceil(messages.length / PAGE_SIZE);
+  const paginated = messages.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
     <div>
@@ -42,7 +49,7 @@ export default function AdminMessages() {
         {messages.length === 0 ? (
           <p className="text-stone-400 text-sm">No messages yet.</p>
         ) : (
-          messages.map((m) => (
+          paginated.map((m) => (
             <div
               key={m.id}
               className={cn(
@@ -82,6 +89,28 @@ export default function AdminMessages() {
           ))
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 mt-8">
+          <button
+            disabled={page === 0}
+            onClick={() => setPage(page - 1)}
+            className="text-xs uppercase tracking-wider text-stone-400 hover:text-stone-600 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            ← Prev
+          </button>
+          <span className="text-xs text-stone-400">
+            Page {page + 1} of {totalPages}
+          </span>
+          <button
+            disabled={page >= totalPages - 1}
+            onClick={() => setPage(page + 1)}
+            className="text-xs uppercase tracking-wider text-stone-400 hover:text-stone-600 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            Next →
+          </button>
+        </div>
+      )}
     </div>
   );
 }

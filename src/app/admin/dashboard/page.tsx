@@ -15,29 +15,14 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      const [reservationsRes, messagesRes] = await Promise.all([
-        fetch("/api/admin/reservations"),
-        fetch("/api/admin/messages"),
-      ]);
+    const abort = new AbortController();
 
-      if (!reservationsRes.ok) return;
+    fetch("/api/admin/stats", { signal: abort.signal })
+      .then((res) => res.ok && res.json())
+      .then((data) => data && setStats(data))
+      .catch(() => {});
 
-      const reservations = await reservationsRes.json();
-      const messages = await messagesRes.json();
-      const today = new Date().toISOString().split("T")[0];
-
-      setStats({
-        totalReservations: reservations.length,
-        pendingReservations: reservations.filter((r: { status: string }) => r.status === "pending").length,
-        confirmedReservations: reservations.filter((r: { status: string }) => r.status === "confirmed").length,
-        todayReservations: reservations.filter((r: { date: string }) => r.date === today).length,
-        totalMessages: messages.length,
-        unreadMessages: messages.filter((m: { isRead: boolean }) => !m.isRead).length,
-      });
-    };
-
-    fetchStats();
+    return () => abort.abort();
   }, []);
 
   if (!stats) {

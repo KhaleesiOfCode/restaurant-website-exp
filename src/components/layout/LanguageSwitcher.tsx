@@ -19,10 +19,10 @@ export default function LanguageSwitcher() {
           key={lang.code}
           onClick={() => setLocale(lang.code)}
           className={cn(
-            "text-xs tracking-wider font-medium px-2 py-1 transition-colors",
+            "text-xs tracking-wider font-medium px-2 py-1 transition-all",
             locale === lang.code
-              ? "text-brand-700"
-              : "text-stone-400 hover:text-stone-600"
+              ? "text-brand-700 border-b-2 border-brand-700"
+              : "text-stone-400 hover:text-stone-600 border-b-2 border-transparent"
           )}
         >
           {lang.label}

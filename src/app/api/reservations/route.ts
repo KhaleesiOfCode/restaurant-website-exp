@@ -2,19 +2,31 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, reservationConfirmationHtml, adminAlertHtml } from "@/lib/email";
 import { siteInfo } from "@/data/site";
+import { sanitize } from "@/lib/utils";
+import { rateLimit } from "@/lib/rate-limit";
 
-const MAX_CAPACITY_PER_SLOT = 30;
+const MAX_CAPACITY_PER_SLOT = parseInt(process.env.MAX_CAPACITY_PER_SLOT || "30", 10);
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { name, email, phone, date, time, guests, notes } = body;
+    const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+    if (!rateLimit(`reservation:${ip}`, 3, 60000)) {
+      return NextResponse.json({ error: "Too many requests. Please wait before trying again." }, { status: 429 });
+    }
 
-    if (!name || !email || !phone || !date || !time || !guests) {
+    const body = await request.json();
+    const name = sanitize(body.name);
+    const email = sanitize(body.email);
+    const phone = sanitize(body.phone);
+    const date = sanitize(body.date);
+    const time = sanitize(body.time);
+    const notes = sanitize(body.notes || "");
+
+    if (!name || !email || !phone || !date || !time || !body.guests) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const guestCount = parseInt(guests);
+    const guestCount = parseInt(body.guests);
 
     // Check availability before creating
     const existing = await prisma.reservation.findMany({

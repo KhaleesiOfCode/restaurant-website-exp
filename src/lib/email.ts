@@ -13,30 +13,47 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
   console.log(`Body: ${html.replace(/<[^>]+>/g, "").substring(0, 300)}...`);
   console.log(`===========================\n`);
 
-  if (!process.env.SMTP_HOST) {
-    console.log("ℹ Set SMTP_HOST in .env to send real emails.");
-    return true;
-  }
-
   try {
     const nodemailer = await import("nodemailer");
-    const transporter = nodemailer.default.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === "true",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
 
-    await transporter.sendMail({
+    let transporter;
+
+    if (process.env.SMTP_HOST) {
+      transporter = nodemailer.default.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: process.env.SMTP_SECURE === "true",
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+    } else {
+      const testAccount = await nodemailer.default.createTestAccount();
+      transporter = nodemailer.default.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        secure: false,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass,
+        },
+      });
+      console.log(`ℹ Using Ethereal test email — ${testAccount.user}`);
+    }
+
+    const info = await transporter.sendMail({
       from: process.env.SMTP_FROM || "noreply@bellavita.it",
       to,
       subject,
       html,
     });
-    console.log(`✓ Email sent to ${to}`);
+
+    if (!process.env.SMTP_HOST) {
+      console.log(`📧 Preview URL: ${nodemailer.default.getTestMessageUrl(info)}`);
+    } else {
+      console.log(`✓ Email sent to ${to}`);
+    }
     return true;
   } catch (error) {
     console.error("Email send failed:", error);

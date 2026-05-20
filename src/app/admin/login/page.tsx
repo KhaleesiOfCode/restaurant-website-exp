@@ -2,6 +2,11 @@
 
 import { useState, type FormEvent } from "react";
 
+function isLocalhost() {
+  if (typeof window === "undefined") return false;
+  return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+}
+
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,16 +65,12 @@ export default function AdminLoginPage() {
               Password
             </label>
             <input
-              type="text"
+              type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 border border-stone-200 focus:border-brand-500 outline-none transition-colors bg-white text-sm"
             />
-            <p className="text-[10px] text-stone-400 mt-1">
-              Text field used to avoid browser warnings on localhost.
-              Set <code className="bg-stone-100 px-1">{`type="password"`}</code> in production.
-            </p>
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
@@ -83,34 +84,36 @@ export default function AdminLoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-stone-200">
-          <button
-            type="button"
-            onClick={async () => {
-              setLoading(true);
-              setError("");
-              try {
-                const res = await fetch("/api/auth/login", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ email: "admin@bellavita.it", password: "admin123" }),
-                });
-                if (res.ok) {
-                  window.location.href = "/admin/dashboard";
-                } else {
-                  setError("Dev login failed — has the DB been seeded?");
+        {isLocalhost() && (
+          <div className="mt-6 pt-6 border-t border-stone-200">
+            <button
+              type="button"
+              onClick={async () => {
+                setLoading(true);
+                setError("");
+                try {
+                  const res = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: "admin@bellavita.it", password: "admin123" }),
+                  });
+                  if (res.ok) {
+                    window.location.href = "/admin/dashboard";
+                  } else {
+                    setError("Dev login failed — has the DB been seeded?");
+                    setLoading(false);
+                  }
+                } catch {
+                  setError("Network error");
                   setLoading(false);
                 }
-              } catch {
-                setError("Network error");
-                setLoading(false);
-              }
-            }}
-            className="w-full text-center text-xs text-stone-400 hover:text-brand-700 transition-colors"
-          >
-            Quick Dev Login
-          </button>
-        </div>
+              }}
+              className="w-full text-center text-xs text-stone-400 hover:text-brand-700 transition-colors"
+            >
+              Quick Dev Login
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

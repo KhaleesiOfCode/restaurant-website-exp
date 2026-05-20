@@ -135,8 +135,15 @@ export default function ContactPage() {
               <div className="space-y-10">
                 <div>
                   <h3 className="font-display text-xl text-stone-900 mb-4">{t("contact.visit")}</h3>
-                  <div className="aspect-[16/9] bg-stone-200 rounded-lg shadow-sm flex items-center justify-center text-stone-400 text-sm">
-                    {t("contact.mapPlaceholder")}
+                  <div className="aspect-[16/9] bg-stone-200 rounded-lg shadow-sm overflow-hidden">
+                    <iframe
+                      title="Ristorante Bella Vita location"
+                      src="https://www.openstreetmap.org/export/embed.html?bbox=11.7703%2C43.0817%2C11.7943%2C43.1017&amp;layer=mapnik&amp;marker=43.0917%2C11.7823"
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                    />
                   </div>
                   <div className="mt-4 text-stone-600 text-sm space-y-1">
                     <p className="font-medium text-stone-900">{t("site.name")}</p>
